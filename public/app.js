@@ -53,7 +53,9 @@ async function api(path, options = {}) {
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || "Request could not be completed.");
+    const error = new Error(data.error || "Request could not be completed.");
+    error.code = data.code;
+    throw error;
   }
   return data;
 }
@@ -163,18 +165,26 @@ async function showPaypalButtons() {
         });
         return result.id;
       },
-      onApprove: async (data) => {
+      onApprove: async (data, actions) => {
         setNotice("Confirming your PayPal Sandbox payment…");
-        const result = await api("/api/paypal/capture", {
-          method: "POST",
-          body: JSON.stringify({ quoteId: state.quote.id, orderId: data.orderID })
-        });
-        if (result.status !== "COMPLETED") {
-          throw new Error("PayPal did not confirm a completed payment.");
+        try {
+          const result = await api("/api/paypal/capture", {
+            method: "POST",
+            body: JSON.stringify({ quoteId: state.quote.id, orderId: data.orderID })
+          });
+          if (result.status !== "COMPLETED") {
+            throw new Error("PayPal did not confirm a completed payment.");
+          }
+          setNotice(`Payment completed in PayPal Sandbox. Approved total: ${dollars(result.totalCents)}.`);
+          elements.paypalButtons.replaceChildren();
+          await refreshOrders();
+        } catch (error) {
+          if (error.code === "INSTRUMENT_DECLINED" && actions && actions.restart) {
+            setNotice("That Sandbox funding source was declined. Choose another funding source in PayPal to continue.", true);
+            return actions.restart();
+          }
+          throw error;
         }
-        setNotice(`Payment completed in PayPal Sandbox. Approved total: ${dollars(result.totalCents)}.`);
-        elements.paypalButtons.replaceChildren();
-        await refreshOrders();
       },
       onCancel: () => setNotice("Checkout was cancelled. Your approved cart remains available until its quote expires."),
       onError: (error) => {
