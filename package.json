@@ -1,0 +1,13 @@
+{
+  "name": "guardcart",
+  "version": "1.0.0",
+  "description": "A consent-first AI shopping agent with PayPal Sandbox checkout.",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "MIT"
+}
