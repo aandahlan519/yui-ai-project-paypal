@@ -52,7 +52,7 @@ Run `npm test` to execute the server-side catalog, budget, and cart validation t
 
 The order history is local to this server and displays the 100 most recent quote records. It shows preparation, approval, and payment states. Interrupted order creation/capture operations are made retryable on startup and use stable PayPal request IDs to reduce duplicate processing.
 
-The server logs PayPal's `debug_id` and issue codes for failures without returning raw provider error messages to the browser. A Sandbox capture declined with `INSTRUMENT_DECLINED` produces a retry-oriented user message.
+The server logs PayPal's `debug_id` and issue codes for failures without returning raw provider error messages to the browser. A Sandbox capture declined with `INSTRUMENT_DECLINED` asks the PayPal button flow to restart buyer approval with another funding source; verify this path with Sandbox negative testing after credentials are configured.
 
 ## Limitations and next hardening steps
 
